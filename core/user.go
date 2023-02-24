@@ -3,7 +3,6 @@ package core
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -11,8 +10,6 @@ import (
 	"github.com/spy16/forge/core/errors"
 	"github.com/spy16/forge/pkg/strutils"
 )
-
-const defaultUserKind = "user"
 
 var (
 	idPattern       = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
@@ -22,7 +19,6 @@ var (
 // User represents a registered user in the system.
 type User struct {
 	ID          string         `json:"id"`
-	Kind        string         `json:"kind"`
 	Data        UserData       `json:"data"`
 	Email       string         `json:"email"`
 	PwdHash     *string        `json:"pwd_hash,omitempty"`
@@ -82,11 +78,6 @@ func (u *User) Clone(safe bool) User {
 
 // NewUser returns a new user value with sensible defaults set.
 func NewUser(kind, username, email string) User {
-	kind = strings.TrimSpace(kind)
-	if kind == "" {
-		kind = defaultUserKind
-	}
-
 	if username == "" {
 		username = fmt.Sprintf("user%s", strutils.RandStr(8, strutils.CharsetNums))
 	}
@@ -96,7 +87,6 @@ func NewUser(kind, username, email string) User {
 
 	return User{
 		ID:          strutils.RandStr(16),
-		Kind:        kind,
 		Data:        map[string]any{},
 		Email:       email,
 		Username:    username,

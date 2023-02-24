@@ -18,17 +18,19 @@ const (
 )
 
 // New returns a new API router instance for the given app.
-func New(app core.App) (chi.Router, error) {
+func New(app core.App, cnfL core.ConfLoader) (chi.Router, error) {
+	prefix := cnfL.String("forge.router.prefix", defRoutePrefix)
+	cookieName := cnfL.String("forge.auth.cookie_name", defAuthCookie)
+
 	router := chi.NewRouter()
 	router.Use(
 		middleware.Recoverer,
 		middleware.RequestID,
 		middleware.RealIP,
-		extractReqCtx(app),
+		extractReqCtx(app.Auth(), cookieName),
 		reqLog(),
 	)
 
-	prefix := app.Configs().String("forge.route_prefix", defRoutePrefix)
 	router.Route(prefix, func(r chi.Router) {
 		r.Get("/ping", handlePing())
 	})

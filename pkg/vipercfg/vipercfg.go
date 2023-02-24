@@ -48,6 +48,8 @@ type Loader struct {
 	envPrefix string
 }
 
+func (l *Loader) Viper() *viper.Viper { return l.viper }
+
 // Int returns the int value set for the given key.
 // Returns defaultValue if keys is not explicitly set.
 func (l *Loader) Int(key string, defaultValue int) int {

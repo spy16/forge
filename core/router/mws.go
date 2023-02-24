@@ -52,9 +52,7 @@ func reqLog() Middleware {
 	}
 }
 
-func extractReqCtx(app core.App) Middleware {
-	cookieName := app.Configs().String("forge.auth.cookie", defAuthCookie)
-
+func extractReqCtx(auth core.Auth, cookieName string) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -68,7 +66,7 @@ func extractReqCtx(app core.App) Middleware {
 
 			// extract token and restore session if any.
 			if token := extractToken(r, cookieName); token != "" {
-				sess, err := app.Auth().RestoreSession(r.Context(), token)
+				sess, err := auth.RestoreSession(r.Context(), token)
 				if err != nil {
 					if !errors.Is(err, errors.MissingAuth) {
 						err = errors.InternalIssue.CausedBy(err)

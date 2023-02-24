@@ -5,15 +5,26 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5"
 )
 
+// Substrate is the base on which the app is forged. Persistence
+// is one of the main responsibilities of substrate.
+type Substrate interface {
+	UserRegistry
+}
+
+// App is the contract guaranteed by Forge app implementations.
 type App interface {
-	DB() *pgx.Conn
 	Auth() Auth
 	Router() chi.Router
-	Configs() ConfLoader
-	UserRegistries() map[string]UserRegistry
+	Substrate() Substrate
+}
+
+// Auth module provides facilities for issuing tokens, verifying
+// tokens, etc.
+type Auth interface {
+	CreateSession(ctx context.Context, u User) (*Session, string, error)
+	RestoreSession(ctx context.Context, token string) (*Session, error)
 }
 
 // UserRegistry provides facilities for managing users.
@@ -23,13 +34,6 @@ type UserRegistry interface {
 	SetPwd(ctx context.Context, uid string, pwd string) error
 	SetData(ctx context.Context, uid string, data UserData) error
 	Register(ctx context.Context, u User) (*User, error)
-}
-
-// Auth module provides facilities for issuing tokens, verifying
-// tokens, etc.
-type Auth interface {
-	CreateSession(ctx context.Context, u User) (*Session, string, error)
-	RestoreSession(ctx context.Context, token string) (*Session, error)
 }
 
 // ConfLoader is responsible for loading configurations during

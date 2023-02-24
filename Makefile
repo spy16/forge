@@ -21,4 +21,4 @@ build:
 
 install:
 	@echo "Installing..."
-	@go install ./cmd/forge
+	@go install -ldflags '-X "main.Version=${VERSION}" -X "main.Commit=${COMMIT}" -X "main.BuildTime=${BUILD_TIME}"' ./cmd/forge
