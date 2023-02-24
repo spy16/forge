@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/spy16/forge/pkg/errors"
+	"github.com/spy16/forge/core/errors"
 )
 
 const keyIDSeparator = "/"

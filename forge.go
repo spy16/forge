@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/spy16/forge/core"
+	"github.com/spy16/forge/core/errors"
 	"github.com/spy16/forge/core/router"
-	"github.com/spy16/forge/pkg/errors"
 )
 
 const defDBSpec = "postgres://postgres@localhost:5432/forge?sslmode=disable"

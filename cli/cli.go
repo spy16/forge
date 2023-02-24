@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/spy16/forge/core"
-	"github.com/spy16/forge/pkg/log"
+	"github.com/spy16/forge/core/log"
 	"github.com/spy16/forge/pkg/vipercfg"
 )
 

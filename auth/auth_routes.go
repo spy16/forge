@@ -9,7 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/markbates/goth"
 
-	"github.com/spy16/forge/pkg/errors"
+	"github.com/spy16/forge/core/errors"
 	"github.com/spy16/forge/pkg/httpx"
 	"github.com/spy16/forge/pkg/strutils"
 )

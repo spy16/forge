@@ -8,9 +8,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/spy16/forge/core"
-	"github.com/spy16/forge/pkg/errors"
+	"github.com/spy16/forge/core/errors"
+	"github.com/spy16/forge/core/log"
 	"github.com/spy16/forge/pkg/httpx"
-	"github.com/spy16/forge/pkg/log"
 )
 
 type Middleware func(http.Handler) http.Handler

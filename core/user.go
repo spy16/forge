@@ -8,7 +8,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/spy16/forge/pkg/errors"
+	"github.com/spy16/forge/core/errors"
 	"github.com/spy16/forge/pkg/strutils"
 )
 

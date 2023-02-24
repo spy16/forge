@@ -3,7 +3,7 @@ package auth
 import (
 	"time"
 
-	"github.com/spy16/forge/pkg/errors"
+	"github.com/spy16/forge/core/errors"
 )
 
 type Session struct {

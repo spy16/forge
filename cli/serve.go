@@ -8,8 +8,8 @@ import (
 
 	"github.com/spy16/forge"
 	"github.com/spy16/forge/core"
+	"github.com/spy16/forge/core/log"
 	"github.com/spy16/forge/pkg/httpx"
-	"github.com/spy16/forge/pkg/log"
 )
 
 func cmdServe(name string, hooks []Hook) *cobra.Command {

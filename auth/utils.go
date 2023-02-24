@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
-	"github.com/spy16/forge/pkg/errors"
+	"github.com/spy16/forge/core/errors"
 )
 
 const (

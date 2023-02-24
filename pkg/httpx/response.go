@@ -6,8 +6,8 @@ import (
 	"reflect"
 
 	"github.com/spy16/forge/core"
-	"github.com/spy16/forge/pkg/errors"
-	"github.com/spy16/forge/pkg/log"
+	"github.com/spy16/forge/core/errors"
+	"github.com/spy16/forge/core/log"
 )
 
 // WriteErr writes the error value to the ResponseWriter. HTTP status is
