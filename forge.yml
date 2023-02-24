@@ -1,0 +1,4 @@
+log_level: info
+log_format: text
+
+db_spec: "postgres://localhost:5432/forge?sslmode=disable"
