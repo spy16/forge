@@ -45,13 +45,15 @@ func main() {
 	rawMaterials := []forge.Option{
 		forge.WithAuth(customAuthModule),
 		forge.WithConfLoader(customConfigLoader),
+		forge.WithPostHook(func(app core.App, loader core.ConfLoader) error {
+			router := app.Router()
+			router.Get("/my-own-api", myHandler)
+			return nil
+		}),
 		// ... more custom things if you want
 	}
 
 	app, _ := forge.Forge("myapp", rawMaterials...)
-	router := app.Router()
-	router.Get("/my-own-api", myHandler)
-
 	_ = httpx.Serve(ctx, ":8080", router, 5*time.Second)
 }
 ```
