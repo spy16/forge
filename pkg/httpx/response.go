@@ -14,6 +14,9 @@ import (
 // inferred from the error value.
 func WriteErr(w http.ResponseWriter, r *http.Request, err error) {
 	e := errors.E(err)
+	if wrw, ok := w.(*WrappedResponseWriter); ok {
+		wrw.Error = e
+	}
 	WriteJSON(w, r, e.Status, e)
 }
 

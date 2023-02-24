@@ -27,12 +27,14 @@ func New(app core.App, cnfL core.ConfLoader) (chi.Router, error) {
 		middleware.Recoverer,
 		middleware.RequestID,
 		middleware.RealIP,
-		extractReqCtx(app.Auth(), cookieName),
-		reqLog(),
+		extractReqCtx(),
+		extractLogCtx(),
+		authenticate(app.Auth(), cookieName),
 	)
 
 	router.Route(prefix, func(r chi.Router) {
 		r.Get("/ping", handlePing())
+		r.Get("/me", handleWhoAmI(app))
 	})
 
 	return router, nil

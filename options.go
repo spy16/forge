@@ -2,7 +2,7 @@ package forge
 
 import "github.com/spy16/forge/core"
 
-// Hook can be used with CLI to further customise app instance.
+// Hook can be used with to further customise an app instance.
 type Hook func(core.App, core.ConfLoader) error
 
 // WithSubstrate sets a custom core.Substrate implementation to be used.
@@ -30,7 +30,8 @@ func WithConfLoader(cnfL core.ConfLoader) Option {
 }
 
 // WithPostHook will set a hook that will be invoked when the app
-// is initialised.
+// is fully initialised. This hook can be used to set up custom
+// routes, etc.
 func WithPostHook(hook Hook) Option {
 	return func(app *forgedApp) error {
 		app.postHook = hook

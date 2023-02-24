@@ -15,17 +15,7 @@ import (
 
 type Middleware func(http.Handler) http.Handler
 
-type wrappedRW struct {
-	http.ResponseWriter
-	status int
-}
-
-func (w *wrappedRW) WriteHeader(status int) {
-	w.status = status
-	w.ResponseWriter.WriteHeader(status)
-}
-
-func reqLog() Middleware {
+func extractLogCtx() Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			t := time.Now()
@@ -38,32 +28,36 @@ func reqLog() Middleware {
 				"remote_addr": rc.RemoteAddr,
 			})
 
-			wr := &wrappedRW{
-				status:         http.StatusOK,
+			wr := &httpx.WrappedResponseWriter{
+				Status:         http.StatusOK,
 				ResponseWriter: w,
 			}
 			next.ServeHTTP(wr, r.WithContext(ctx))
 
-			log.Info(ctx, "request finished", core.M{
-				"status":  wr.status,
-				"latency": time.Since(t),
-			})
+			if wr.Status >= 500 {
+				log.Error(ctx, "request finished with 5xx", wr.Error, core.M{
+					"status":  wr.Status,
+					"latency": time.Since(t),
+				})
+			} else if wr.Status >= 400 {
+				log.Warn(ctx, "request finished with 4xx", core.M{
+					"error":   wr.Error,
+					"status":  wr.Status,
+					"latency": time.Since(t),
+				})
+			} else {
+				log.Info(ctx, "request finished", core.M{
+					"status":  wr.Status,
+					"latency": time.Since(t),
+				})
+			}
 		})
 	}
 }
 
-func extractReqCtx(auth core.Auth, cookieName string) Middleware {
+func authenticate(auth core.Auth, cookieName string) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			rc := core.ReqCtx{
-				Path:       r.URL.Path,
-				Method:     r.Method,
-				Session:    nil,
-				RequestID:  middleware.GetReqID(ctx),
-				RemoteAddr: r.RemoteAddr,
-			}
-
 			// extract token and restore session if any.
 			if token := extractToken(r, cookieName); token != "" {
 				sess, err := auth.RestoreSession(r.Context(), token)
@@ -74,10 +68,33 @@ func extractReqCtx(auth core.Auth, cookieName string) Middleware {
 					httpx.WriteErr(w, r, err)
 					return
 				}
+
+				ctx := r.Context()
+				rc := core.FromCtx(ctx)
 				rc.Session = sess
+				ctx = core.NewCtx(ctx, rc)
+
+				r = r.WithContext(ctx)
 			}
 
-			next.ServeHTTP(w, r.WithContext(core.NewCtx(ctx, rc)))
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func extractReqCtx() Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			ctx = core.NewCtx(r.Context(), core.ReqCtx{
+				Path:       r.URL.Path,
+				Method:     r.Method,
+				Session:    nil,
+				RequestID:  middleware.GetReqID(ctx),
+				RemoteAddr: r.RemoteAddr,
+			})
+
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

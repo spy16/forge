@@ -50,9 +50,6 @@ func (err Error) Error() string {
 // See https://blog.golang.org/go1.13-errors.
 func (err Error) Is(other error) bool {
 	if oe, ok := other.(Error); ok {
-		if oe.Code != "" && oe.Code != err.Code {
-			return false
-		}
 		return oe.Status == err.Status
 	}
 

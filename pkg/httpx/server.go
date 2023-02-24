@@ -10,6 +10,17 @@ import (
 	"github.com/spy16/forge/core/log"
 )
 
+type WrappedResponseWriter struct {
+	http.ResponseWriter
+	Status int
+	Error  error
+}
+
+func (w *WrappedResponseWriter) WriteHeader(status int) {
+	w.Status = status
+	w.ResponseWriter.WriteHeader(status)
+}
+
 // WrapErrH is an extended version of http.HandlerFunc with automatic error
 // handling.
 func WrapErrH(fn func(w http.ResponseWriter, r *http.Request) error) http.HandlerFunc {

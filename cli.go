@@ -45,8 +45,9 @@ func cmdServe(name string, forgeOpts []Option) *cobra.Command {
 		Short: "Start HTTP server",
 		Run: func(cmd *cobra.Command, args []string) {
 			cl := makeConfLoader(name, cmd)
+			forgeOpts = append([]Option{WithConfLoader(cl)}, forgeOpts...)
 
-			app, err := Forge(cmd.Context(), name, WithConfLoader(cl))
+			app, err := Forge(cmd.Context(), name, forgeOpts...)
 			if err != nil {
 				log.Fatal(cmd.Context(), "failed to forge app", err)
 			}
