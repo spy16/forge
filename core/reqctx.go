@@ -4,29 +4,30 @@ import (
 	"context"
 )
 
-var ctxKey = ctxKeyType("req_ctx")
-
-type ctxKeyType string
+var ReqCtxKey = "forge:req_ctx"
 
 // ReqCtx represents the context for the current request.
 type ReqCtx struct {
-	Session    *Session
 	Path       string
+	Route      string
 	Method     string
+	Session    *Session
 	RequestID  string
 	RemoteAddr string
 }
+
+func (rc ReqCtx) IsZero() bool { return rc == (ReqCtx{}) }
 
 // Authenticated returns true if rc contains authenticated user.
 func (rc ReqCtx) Authenticated() bool { return rc.Session != nil }
 
 // NewCtx returns a new Go context with given reqCtx injected.
 func NewCtx(ctx context.Context, reqCtx ReqCtx) context.Context {
-	return context.WithValue(ctx, ctxKey, reqCtx)
+	return context.WithValue(ctx, ReqCtxKey, reqCtx)
 }
 
 // FromCtx returns the request context from Go context.
 func FromCtx(ctx context.Context) ReqCtx {
-	v, _ := ctx.Value(ctxKey).(ReqCtx)
-	return v
+	rc, _ := ctx.Value(ReqCtxKey).(ReqCtx)
+	return rc
 }

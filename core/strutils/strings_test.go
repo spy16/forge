@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/spy16/forge/pkg/strutils"
+	"github.com/spy16/forge/core/strutils"
 )
 
 func TestSnakeCase(t *testing.T) {

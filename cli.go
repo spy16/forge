@@ -3,16 +3,17 @@ package forge
 import (
 	"bytes"
 	"fmt"
-	"net/http"
 	"time"
 
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
+	"github.com/spy16/forge/builtins/firebase"
 	"github.com/spy16/forge/core"
 	"github.com/spy16/forge/core/log"
-	"github.com/spy16/forge/pkg/httpx"
-	"github.com/spy16/forge/pkg/vipercfg"
+	"github.com/spy16/forge/core/vipercfg"
 )
 
 // CLI returns a new Cobra CLI that can be used directly.
@@ -40,25 +41,40 @@ func CLI(name string, forgeOpts ...Option) *cobra.Command {
 func cmdServe(name string, forgeOpts []Option) *cobra.Command {
 	var httpAddr, staticDir string
 	var graceT time.Duration
+	var debug bool
 	cmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Start HTTP server",
 		Run: func(cmd *cobra.Command, args []string) {
+			if !debug {
+				gin.SetMode(gin.ReleaseMode)
+			}
+
 			cl := makeConfLoader(name, cmd)
-			forgeOpts = append([]Option{WithConfLoader(cl)}, forgeOpts...)
+			forgeOpts = append(forgeOpts, WithConfLoader(cl))
+
+			// When firebase project ID is set, assume user management and token issuing
+			// is done by Firebase. So validate token and extract user accordingly.
+			firebaseProject := cl.String("auth.firebase_project", "")
+			if firebaseProject != "" {
+				forgeOpts = append([]Option{
+					WithAuth(&firebase.Auth{
+						ProjectID: firebaseProject,
+					}),
+				}, forgeOpts...)
+			}
 
 			app, err := Forge(cmd.Context(), name, forgeOpts...)
 			if err != nil {
 				log.Fatal(cmd.Context(), "failed to forge app", err)
 			}
 
-			router := app.Router()
 			if staticDir != "" {
-				router.Mount("/", http.FileServer(http.Dir(staticDir)))
+				app.Use(static.ServeRoot("/", staticDir))
 			}
 
 			log.Info(cmd.Context(), "starting http server", core.M{"http_addr": httpAddr})
-			if err := httpx.Serve(cmd.Context(), httpAddr, router, graceT); err != nil {
+			if err := app.Run(httpAddr); err != nil {
 				log.Fatal(cmd.Context(), "server exited with error", err)
 			}
 		},
@@ -68,6 +84,8 @@ func cmdServe(name string, forgeOpts []Option) *cobra.Command {
 	flags.StringVar(&httpAddr, "http", ":8080", "HTTP server address")
 	flags.StringVar(&staticDir, "static", "", "If set, serves all files in the dir as-is")
 	flags.DurationVarP(&graceT, "grace", "G", 5*time.Second, "Grace period for shutdown")
+	flags.BoolVar(&debug, "debug", false, "Running in debug mode")
+
 	return cmd
 }
 

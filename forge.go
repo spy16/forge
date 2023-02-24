@@ -2,15 +2,14 @@ package forge
 
 import (
 	"context"
+	"net/http"
 	"regexp"
-	"time"
 
-	"github.com/spy16/forge/builtin/jwtauth"
-	"github.com/spy16/forge/builtin/pgbase"
-	"github.com/spy16/forge/core"
+	"github.com/gin-contrib/requestid"
+	"github.com/gin-gonic/gin"
+
 	"github.com/spy16/forge/core/errors"
-	"github.com/spy16/forge/core/router"
-	"github.com/spy16/forge/pkg/vipercfg"
+	"github.com/spy16/forge/core/vipercfg"
 )
 
 var namePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_]*[A-Za-z0-9]$`)
@@ -18,18 +17,20 @@ var namePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_]*[A-Za-z0-9]$`)
 // Option values can be used to customise the forging process.
 type Option func(app *forgedApp) error
 
-// Forge initialises a new app instance from the given configs. This
-// includes connecting to postgres & executing the necessary migrations.
-func Forge(ctx context.Context, name string, opts ...Option) (core.App, error) {
+// Forge initialises a new app instance from the given options. All modules
+// will be initialised, all routes will be setup and a fiber app instance
+// ready-for-use will be returned.
+func Forge(ctx context.Context, name string, opts ...Option) (*gin.Engine, error) {
 	if !namePattern.MatchString(name) {
 		return nil, errors.InvalidInput.
 			Hintf("name must match '%s'", namePattern)
 	}
 
 	app := &forgedApp{
-		ctx:  ctx,
 		name: name,
+		ginE: newGin(),
 	}
+
 	for _, opt := range withDefaults(opts) {
 		if err := opt(app); err != nil {
 			return nil, err
@@ -44,38 +45,40 @@ func Forge(ctx context.Context, name string, opts ...Option) (core.App, error) {
 		app.confL = v
 	}
 
-	if app.substrate == nil {
-		cfg := pgbase.Config{
-			PGSpec: app.confL.String("forge.pg_spec", "postgres://postgres@localhost:5432/forge?sslmode=disable"),
-		}
-		pgSub, err := pgbase.Connect(ctx, cfg)
-		if err != nil {
-			return nil, err
-		}
-		app.substrate = pgSub
-	}
-
-	if app.auth == nil {
-		au, err := jwtauth.New(
-			app.confL.Duration("forge.auth.session_ttl", 1*time.Hour),
-			app.confL.String("forge.auth.jwt_secret", ""),
-		)
-		if err != nil {
-			return nil, err
-		}
-		app.auth = au
-	}
-
-	appRouter, err := router.New(app, app.confL)
-	if err != nil {
+	if err := app.setupRoutes(); err != nil {
 		return nil, err
 	}
-	app.router = appRouter
 
 	if app.postHook != nil {
 		if err := app.postHook(app, app.confL); err != nil {
 			return nil, err
 		}
 	}
-	return app, nil
+
+	return app.ginE, nil
+}
+
+func newGin() *gin.Engine {
+	ge := gin.New()
+
+	ge.Use(
+		gin.Recovery(),
+		requestid.New(),
+		extractReqCtx(),
+		requestLogger(),
+	)
+
+	ge.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusNotFound,
+			errors.NotFound.Hintf("path not found"))
+	})
+
+	ge.HandleMethodNotAllowed = true
+	ge.NoMethod(func(c *gin.Context) {
+		err := errors.Error{Status: http.StatusMethodNotAllowed}
+		c.JSON(http.StatusMethodNotAllowed,
+			err.Hintf("method not allowed"))
+	})
+
+	return ge
 }

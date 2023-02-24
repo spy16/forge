@@ -19,6 +19,13 @@ const (
 
 var keyKindPattern = regexp.MustCompile(`^[A-Za-z_]+$`)
 
+// UserKey represents login-key of a user with any additional
+// attributes.
+type UserKey struct {
+	AuthKey string `json:"auth_key"`
+	Attribs M      `json:"attribs"`
+}
+
 // NewAuthKey returns a new formatted user login-key.
 func NewAuthKey(kind, value string) string {
 	return fmt.Sprintf("%s%s%s", kind, keyIDSeparator, value)
