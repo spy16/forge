@@ -54,6 +54,6 @@ func main() {
 	}
 
 	app, _ := forge.Forge("myapp", rawMaterials...)
-	_ = httpx.Serve(ctx, ":8080", router, 5*time.Second)
+	_ = httpx.Serve(ctx, ":8080", app.Router(), 5*time.Second)
 }
 ```
