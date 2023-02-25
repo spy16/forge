@@ -16,6 +16,19 @@ func Ctx(ctx context.Context, fields core.M) context.Context {
 }
 
 func fromCtx(ctx context.Context) core.M {
+	rc := reqCtxMap(core.FromCtx(ctx))
+
 	f, _ := ctx.Value(fieldsKey).(core.M)
-	return f
+	return mergeFields(rc, []core.M{f})
+}
+
+func reqCtxMap(rc core.ReqCtx) core.M {
+	return map[string]any{
+		"path":        rc.Path,
+		"route":       rc.Route,
+		"method":      rc.Method,
+		"authn":       rc.Authenticated(),
+		"remote_addr": rc.RemoteAddr,
+		"request_id":  rc.RequestID,
+	}
 }

@@ -3,7 +3,6 @@ package forge
 import (
 	"bytes"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/spy16/forge/core"
 	"github.com/spy16/forge/core/log"
-	"github.com/spy16/forge/pkg/httpx"
 	"github.com/spy16/forge/pkg/vipercfg"
 )
 
@@ -52,13 +50,12 @@ func cmdServe(name string, forgeOpts []Option) *cobra.Command {
 				log.Fatal(cmd.Context(), "failed to forge app", err)
 			}
 
-			router := app.Router()
 			if staticDir != "" {
-				router.Mount("/", http.FileServer(http.Dir(staticDir)))
+				app.Static("/", staticDir)
 			}
 
 			log.Info(cmd.Context(), "starting http server", core.M{"http_addr": httpAddr})
-			if err := httpx.Serve(cmd.Context(), httpAddr, router, graceT); err != nil {
+			if err := app.Run(httpAddr); err != nil {
 				log.Fatal(cmd.Context(), "server exited with error", err)
 			}
 		},

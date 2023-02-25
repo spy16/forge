@@ -1,4 +1,4 @@
-package jwtauth
+package pgbase
 
 import "github.com/spy16/forge/core/errors"
 

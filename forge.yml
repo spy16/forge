@@ -1,10 +1,9 @@
 log_level: info
 log_format: text
 
-forge:
-  pg_spec: "postgres://postgres@localhost:5432/forge?sslmode=disable"
-  router:
-    prefix: /forge
-  auth:
-    cookie_name: _forge_auth
-    jwt_secret: 2c4b8f3ecd4e5d2ff0c1f7e0a5cf88cfbeefd1bd
+auth:
+  cookie_name:
+  type: pgbase
+  conn_str: "postgres://postgres@localhost:5432/forge?sslmode=disable"
+  jwt_ttl: 12h
+  jwt_secret: 2c4b8f3ecd4e5d2ff0c1f7e0a5cf88cfbeefd1bd

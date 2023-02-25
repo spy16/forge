@@ -4,36 +4,37 @@ import (
 	"context"
 	"time"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/gin-gonic/gin"
 )
-
-// Substrate is the base on which the app is forged. Persistence
-// is one of the main responsibilities of substrate.
-type Substrate interface {
-	UserRegistry
-}
 
 // App is the contract guaranteed by Forge app implementations.
 type App interface {
 	Auth() Auth
-	Router() chi.Router
-	Substrate() Substrate
+	Authenticate() gin.HandlerFunc
 }
 
-// Auth module provides facilities for issuing tokens, verifying
-// tokens, etc.
+// Auth implementation is responsible for validating access tokens
+// and restoring user-session from it.
 type Auth interface {
-	CreateSession(ctx context.Context, u User) (*Session, string, error)
-	RestoreSession(ctx context.Context, token string) (*Session, error)
+	Authenticate(ctx context.Context, token string) (*Session, error)
 }
 
-// UserRegistry provides facilities for managing users.
-type UserRegistry interface {
+// Session represents a login-session for the contained user.
+type Session struct {
+	User   User
+	Token  string
+	Expiry time.Time
+}
+
+// UserBase is an extension interface for Auth module that can
+// add user management capabilities.
+type UserBase interface {
 	User(ctx context.Context, key string) (*User, error)
 	Verify(ctx context.Context, uid, token string) (*User, error)
 	SetPwd(ctx context.Context, uid string, pwd string) error
 	SetData(ctx context.Context, uid string, data UserData) error
-	Register(ctx context.Context, u User) (*User, error)
+	Register(ctx context.Context, u User, keys []UserKey) (*User, error)
+	IssueToken(ctx context.Context, u User) (*Session, string, error)
 }
 
 // ConfLoader is responsible for loading configurations during

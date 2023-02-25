@@ -16,22 +16,26 @@ Forge can be used either directly as a tool or as a library.
 
 > If you have frontend build, use `--static=./ui` to serve as static files.
 
-### As a library
+### As a library [Goal]
 
 To use the pre-built CLI with custom initialisation of app:
 
 ```golang
-package foo
+package main
 
 func main() {
-	postHook := func(app core.App, loader core.ConfLoader) error {
-		router := app.Router()
-		router.Get("/my-api", myHandler)
-		return nil
-	}
+	cli := forge.CLI("myapp",
+		forge.WithFirebase(),
+		forge.WithStatic(http.Dir("./foo")),
+		forge.WithPostHook(func(app core.App, ge *gin.Engine) error {
+			ge.GET("/api/myendpoint", app.Authenticate(), func(ctx *gin.Context) {
+				// do some stuff
+			})
 
-	cmd := forge.CLI("myapp",forge.WithPostHook(postHook))
-	_ = cmd.Execute()
+			return nil
+		}),
+	)
+	_ = cli.Execute()
 }
 
 ```
@@ -39,21 +43,26 @@ func main() {
 To use Forge (or "forge an app") from scratch, use the `forge.Forge()` function.
 
 ```golang
-package foo
+package main
 
 func main() {
 	rawMaterials := []forge.Option{
-		forge.WithAuth(customAuthModule),
-		forge.WithConfLoader(customConfigLoader),
-		forge.WithPostHook(func(app core.App, loader core.ConfLoader) error {
-			router := app.Router()
-			router.Get("/my-own-api", myHandler)
+		forge.WithConfLoader(myOwn),
+		forge.WithPGBase(),
+		forge.WithStatic(http.Dir("./foo")),
+		forge.WithPostHook(func (app core.App, ge *gin.Engine) error {
+            ge.GET("/api/myendpoint", app.Authenticate(), func(ctx *gin.Context) {
+                // do some stuff
+            })
+			
 			return nil
-		}),
-		// ... more custom things if you want
+	    }),
 	}
 
-	app, _ := forge.Forge("myapp", rawMaterials...)
-	_ = httpx.Serve(ctx, ":8080", app.Router(), 5*time.Second)
+	ge, err := forge.Forge("myapp", rawMaterials...)
+	if err != nil {
+		panic(err)
+	}
+	ge.Run()
 }
 ```
