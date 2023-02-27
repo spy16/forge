@@ -18,50 +18,29 @@ Forge can be used either directly as a tool or as a library.
 
 ### As a library [Goal]
 
-To use the pre-built CLI with custom initialisation of app:
-
 ```golang
 package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/spy16/forge"
+	"github.com/spy16/forge/builtins/firebase"
+	"github.com/spy16/forge/core"
+)
 
 func main() {
 	cli := forge.CLI("myapp",
 		forge.WithAuth(&firebase.Auth{
-            ProjectID: "foo",
-        }),
+			ProjectID: "foo",
+		}),
 		forge.WithPostHook(func(app core.App, ge *gin.Engine) error {
-			ge.GET("/api/myendpoint", app.Authenticate(), func(ctx *gin.Context) {
-                // Only accessible with firebase auth token
+			ge.GET("/api/my-endpoint", app.Authenticate(), func(ctx *gin.Context) {
+				// Only accessible with firebase auth token
 			})
 
 			return nil
 		}),
 	)
 	_ = cli.Execute()
-}
-
-```
-
-To use Forge (or "forge an app") from scratch, use the `forge.Forge()` function.
-
-```golang
-package main
-
-func main() {
-	rawMaterials := []forge.Option{
-		forge.WithConfLoader(myOwn),
-		forge.WithPostHook(func (app core.App, ge *gin.Engine) error {
-            ge.GET("/api/myendpoint", app.Authenticate(), func(ctx *gin.Context) {
-                // do some stuff
-            })
-			
-			return nil
-	    }),
-	}
-
-	ge, err := forge.Forge("myapp", rawMaterials...)
-	if err != nil {
-		panic(err)
-	}
-	ge.Run()
 }
 ```
