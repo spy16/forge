@@ -12,6 +12,7 @@ type App interface {
 	Gin() *gin.Engine
 	Auth() Auth
 	Users() UserRegistry
+	Authenticate() gin.HandlerFunc
 }
 
 // Auth implementation is responsible for validating access tokens
