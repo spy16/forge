@@ -33,11 +33,12 @@ func main() {
 		forge.WithAuth(&firebase.Auth{
 			ProjectID: "foo",
 		}),
-		forge.WithPostHook(func(app core.App, ge *gin.Engine) error {
-			ge.GET("/api/my-endpoint", app.Authenticate(), func(ctx *gin.Context) {
+		forge.WithPostHook(func(app core.App, conf core.ConfigLoader) error {
+			r := app.Chi()
+			r.Use(app.Authenticate())
+			r.Get("/api/my-endpoint", func(w http.ResponseWriter, r *http.Request) {
 				// Only accessible with firebase auth token
-			})
-
+            })
 			return nil
 		}),
 	)
