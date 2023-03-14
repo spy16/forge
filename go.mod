@@ -3,9 +3,8 @@ module github.com/spy16/forge
 go 1.19
 
 require (
-	github.com/gin-contrib/requestid v0.0.6
-	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.9.0
+	github.com/go-chi/chi/v5 v5.0.8
 	github.com/golang-jwt/jwt/v5 v5.0.0-rc.1
 	github.com/pquerna/cachecontrol v0.1.0
 	github.com/sirupsen/logrus v1.9.0
@@ -13,6 +12,7 @@ require (
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/crypto v0.7.0
+	google.golang.org/appengine v1.6.7
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -26,7 +26,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.11.2 // indirect
 	github.com/goccy/go-json v0.10.0 // indirect
-	github.com/google/uuid v1.3.0 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect

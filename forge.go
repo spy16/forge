@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/gin-contrib/requestid"
-	"github.com/gin-gonic/gin"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/spy16/forge/core/errors"
+	"github.com/spy16/forge/core/servio"
 	"github.com/spy16/forge/core/vipercfg"
 )
 
@@ -20,7 +21,7 @@ type Option func(app *forgedApp) error
 // Forge initialises a new app instance from the given options. All modules
 // will be initialised, all routes will be setup and a fiber app instance
 // ready-for-use will be returned.
-func Forge(ctx context.Context, name string, opts ...Option) (*gin.Engine, error) {
+func Forge(ctx context.Context, name string, opts ...Option) (chi.Router, error) {
 	if !namePattern.MatchString(name) {
 		return nil, errors.InvalidInput.
 			Hintf("name must match '%s'", namePattern)
@@ -28,7 +29,7 @@ func Forge(ctx context.Context, name string, opts ...Option) (*gin.Engine, error
 
 	app := &forgedApp{
 		name: name,
-		ginE: newGin(),
+		chi:  newChi(),
 	}
 
 	for _, opt := range withDefaults(opts) {
@@ -55,29 +56,26 @@ func Forge(ctx context.Context, name string, opts ...Option) (*gin.Engine, error
 		}
 	}
 
-	return app.ginE, nil
+	return app.chi, nil
 }
 
-func newGin() *gin.Engine {
-	ge := gin.New()
+func newChi() chi.Router {
+	ge := chi.NewRouter()
 
 	ge.Use(
-		gin.Recovery(),
-		requestid.New(),
+		middleware.Recoverer,
+		middleware.RequestID,
 		extractReqCtx(),
 		requestLogger(),
 	)
 
-	ge.NoRoute(func(c *gin.Context) {
-		c.JSON(http.StatusNotFound,
-			errors.NotFound.Hintf("path not found"))
+	ge.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		servio.JSONErr(w, r, errors.NotFound.Hintf("path not found"))
 	})
 
-	ge.HandleMethodNotAllowed = true
-	ge.NoMethod(func(c *gin.Context) {
-		err := errors.Error{Status: http.StatusMethodNotAllowed}
-		c.JSON(http.StatusMethodNotAllowed,
-			err.Hintf("method not allowed"))
+	ge.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) {
+		err := errors.Error{Status: http.StatusMethodNotAllowed}.Hintf("method not allowed")
+		servio.JSONErr(w, r, err)
 	})
 
 	return ge

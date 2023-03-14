@@ -1,48 +1,55 @@
 package forge
 
 import (
+	"net/http"
 	"time"
 
-	"github.com/gin-contrib/requestid"
-	"github.com/gin-gonic/gin"
+	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/spy16/forge/core"
 	"github.com/spy16/forge/core/log"
+	"github.com/spy16/forge/core/servio"
 )
 
-func extractReqCtx() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		ctx.Set(core.ReqCtxKey, core.ReqCtx{
-			Path:       ctx.Request.URL.Path,
-			Route:      ctx.FullPath(),
-			Method:     ctx.Request.Method,
-			Session:    nil,
-			RequestID:  requestid.Get(ctx),
-			RemoteAddr: ctx.ClientIP(),
-		})
+func extractReqCtx() core.Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			rc := core.ReqCtx{
+				Path:       r.URL.Path,
+				Route:      r.URL.Path, // TODO: set route pattern here.
+				Method:     r.Method,
+				Session:    nil,
+				RequestID:  middleware.GetReqID(r.Context()),
+				RemoteAddr: r.RemoteAddr,
+			}
 
-		ctx.Next()
+			ctx := core.NewCtx(r.Context(), rc)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
 	}
 }
 
-func requestLogger() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		t := time.Now()
-		ctx.Next() // call next handler
-		status := ctx.Writer.Status()
-		fields := core.M{
-			"status":  status,
-			"latency": time.Since(t),
-		}
+func requestLogger() core.Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			t := time.Now()
 
-		if status >= 500 {
-			fields["errors"] = ctx.Errors
-			log.Error(ctx, "request finished with 5xx", nil, fields)
-		} else if status >= 400 {
-			fields["errors"] = ctx.Errors
-			log.Warn(ctx, "request finished with 4xx", fields)
-		} else {
-			log.Info(ctx, "request finished", fields)
-		}
+			rwc := &servio.ResponseWriterCapture{ResponseWriter: w}
+			next.ServeHTTP(rwc, r)
+
+			status := rwc.Status
+			fields := core.M{
+				"status":  status,
+				"latency": time.Since(t),
+			}
+
+			if status >= 500 {
+				log.Error(r.Context(), "request finished with 5xx", nil, fields)
+			} else if status >= 400 {
+				log.Warn(r.Context(), "request finished with 4xx", fields)
+			} else {
+				log.Info(r.Context(), "request finished", fields)
+			}
+		})
 	}
 }

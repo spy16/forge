@@ -2,18 +2,21 @@ package core
 
 import (
 	"context"
+	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/go-chi/chi/v5"
 )
 
 // App is the contract guaranteed by Forge app implementations.
 type App interface {
-	Gin() *gin.Engine
+	Chi() chi.Router
 	Auth() Auth
 	Users() UserRegistry
-	Authenticate() gin.HandlerFunc
+	Authenticate() Middleware
 }
+
+type Middleware func(http.Handler) http.Handler
 
 // Auth implementation is responsible for validating access tokens
 // and restoring user-session from it.

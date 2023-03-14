@@ -3,9 +3,9 @@ package forge
 import (
 	"bytes"
 	"fmt"
+	"net/http"
 	"time"
 
-	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -13,6 +13,7 @@ import (
 	"github.com/spy16/forge/builtins/firebase"
 	"github.com/spy16/forge/core"
 	"github.com/spy16/forge/core/log"
+	"github.com/spy16/forge/core/servio"
 	"github.com/spy16/forge/core/vipercfg"
 )
 
@@ -70,11 +71,11 @@ func cmdServe(name string, forgeOpts []Option) *cobra.Command {
 			}
 
 			if staticDir != "" {
-				app.Use(static.ServeRoot("/", staticDir))
+				app.Mount("/", http.FileServer(http.Dir(staticDir)))
 			}
 
 			log.Info(cmd.Context(), "starting http server", core.M{"http_addr": httpAddr})
-			if err := app.Run(httpAddr); err != nil {
+			if err := servio.Serve(cmd.Context(), httpAddr, app); err != nil {
 				log.Fatal(cmd.Context(), "server exited with error", err)
 			}
 		},

@@ -1,24 +1,31 @@
 package forge
 
 import (
-	"github.com/gin-gonic/gin"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
 
 	"github.com/spy16/forge/core"
+	"github.com/spy16/forge/core/servio"
 )
 
 const defRoutePrefix = "/forge"
 
 func (app *forgedApp) setupRoutes() error {
-	grp := app.ginE.Group(defRoutePrefix)
+	app.chi.Route(defRoutePrefix, func(r chi.Router) {
+		r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+			servio.JSON(w, r, http.StatusNoContent, nil)
+		})
 
-	grp.GET("/ping", func(ctx *gin.Context) {
-		ctx.Status(204)
+		// authenticated routes.
+		r.Group(func(r chi.Router) {
+			r.Use(app.Authenticate())
+
+			r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
+				rc := core.FromCtx(r.Context())
+				servio.JSON(w, r, 200, rc.Session.User)
+			})
+		})
 	})
-
-	grp.GET("/me", app.Authenticate(), func(ctx *gin.Context) {
-		rc := core.FromCtx(ctx)
-		ctx.JSON(200, rc.Session.User)
-	})
-
 	return nil
 }
