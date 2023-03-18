@@ -5,9 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"google.golang.org/appengine/log"
-
 	"github.com/spy16/forge/core/errors"
+	"github.com/spy16/forge/core/log"
 )
 
 const gracePeriod = 5 * time.Second
@@ -33,7 +32,9 @@ func Serve(ctx context.Context, addr string, handler http.Handler) error {
 	}
 
 	go func() {
-		log.Infof(ctx, "listening on %s...", httpServer.Addr)
+		log.Info(ctx, "starting server", map[string]any{
+			"addr": httpServer.Addr,
+		})
 		err := httpServer.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errCh <- err
@@ -45,7 +46,9 @@ func Serve(ctx context.Context, addr string, handler http.Handler) error {
 		return err
 
 	case <-ctx.Done():
-		log.Infof(ctx, "context cancelled, shutting down")
+		log.Info(ctx, "context cancelled, shutting down", map[string]any{
+			"reason": ctx.Err(),
+		})
 
 		graceCtx, cancel := context.WithTimeout(context.Background(), gracePeriod)
 		defer cancel()
