@@ -33,9 +33,9 @@ type UserRegistry interface {
 
 // Session represents a login-session for the contained user.
 type Session struct {
-	User   User
-	Token  string
-	Expiry time.Time
+	User   User      `json:"user"`
+	Token  string    `json:"token"`
+	Expiry time.Time `json:"expiry"`
 }
 
 // ConfLoader is responsible for loading configurations during

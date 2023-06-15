@@ -25,7 +25,7 @@ type User struct {
 	Username    string         `json:"username"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
-	VerifiedAt  *time.Time     `json:"verified_at"`
+	VerifiedAt  *time.Time     `json:"verified_at,omitempty"`
 	VerifyToken *string        `json:"verify_token,omitempty"`
 	Attributes  map[string]any `json:"-"`
 }
