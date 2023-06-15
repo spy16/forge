@@ -22,7 +22,7 @@ type User struct {
 	Data        UserData       `json:"data"`
 	Email       string         `json:"email"`
 	PwdHash     *string        `json:"pwd_hash,omitempty"`
-	Username    string         `json:"username"`
+	Username    string         `json:"username,omitempty"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	VerifiedAt  *time.Time     `json:"verified_at,omitempty"`

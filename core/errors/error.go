@@ -7,10 +7,11 @@ import (
 // Error represents an error value with all the relevant context.
 type Error struct {
 	Code      string         `json:"code"`
-	Cause     error          `json:"cause"`
+	Cause     error          `json:"cause,omitempty"`
 	Status    int            `json:"status"`
-	Attribs   map[string]any `json:"attribs"`
-	DebugHint string         `json:"debug_hint"`
+	Attribs   map[string]any `json:"attribs,omitempty"`
+	Message   string         `json:"message"`
+	DebugHint string         `json:"debug_hint,omitempty"`
 }
 
 // Coded returns a clone of the original error with the given code.
@@ -24,6 +25,13 @@ func (err Error) Coded(code string, attribs ...map[string]any) Error {
 func (err Error) CausedBy(e error) Error {
 	cloned := err.clone()
 	cloned.Cause = e
+	return cloned
+}
+
+// Msgf returns a clone of the error with a user-friendly message.
+func (err Error) Msgf(format string, args ...any) Error {
+	cloned := err.clone()
+	cloned.Message = fmt.Sprintf(format, args...)
 	return cloned
 }
 

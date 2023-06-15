@@ -14,7 +14,6 @@ import (
 // Auth implements auth module for firebase-based user management.
 type Auth struct {
 	keys      KeySource
-	Registry  core.UserRegistry
 	ProjectID string
 }
 
@@ -60,9 +59,6 @@ func (au *Auth) upsertLocalUser(ctx context.Context, claims tokClaims) (*core.Us
 		u.VerifiedAt = &now
 	}
 
-	if au.Registry != nil {
-		return au.Registry.Upsert(ctx, u)
-	}
 	return &u, nil
 }
 

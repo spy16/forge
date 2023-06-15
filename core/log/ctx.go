@@ -3,8 +3,6 @@ package log
 import (
 	"context"
 
-	"github.com/gin-gonic/gin"
-
 	"github.com/spy16/forge/core"
 )
 
@@ -19,15 +17,7 @@ func Ctx(ctx context.Context, fieldArr ...core.M) context.Context {
 }
 
 func fromCtx(ctx context.Context) core.M {
-	var fields core.M
-	if gc, ok := ctx.(*gin.Context); ok {
-		val, found := gc.Get(fieldsKey)
-		if found {
-			fields, _ = val.(core.M)
-		}
-	} else {
-		fields, _ = ctx.Value(fieldsKey).(core.M)
-	}
+	fields, _ := ctx.Value(fieldsKey).(core.M)
 
 	rc := core.FromCtx(ctx)
 	if rc.IsZero() {

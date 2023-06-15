@@ -14,14 +14,52 @@ var (
 )
 
 var (
-	NotFound      = Error{Code: "not_found", Status: http.StatusNotFound}
-	Conflict      = Error{Code: "conflict", Status: http.StatusConflict}
-	Forbidden     = Error{Code: "forbidden", Status: http.StatusForbidden}
-	Throttled     = Error{Code: "throttled", Status: http.StatusTooManyRequests}
-	MissingAuth   = Error{Code: "missing_auth", Status: http.StatusUnauthorized}
-	Unsupported   = Error{Code: "unsupported", Status: http.StatusUnprocessableEntity}
-	InvalidInput  = Error{Code: "invalid_input", Status: http.StatusBadRequest}
-	InternalIssue = Error{Code: "internal_issue", Status: http.StatusInternalServerError}
+	NotFound = Error{
+		Code:    "not_found",
+		Status:  http.StatusNotFound,
+		Message: "Resource not found",
+	}
+
+	Conflict = Error{
+		Code:    "conflict",
+		Status:  http.StatusConflict,
+		Message: "A conflicting state exists",
+	}
+
+	Forbidden = Error{
+		Code:    "forbidden",
+		Status:  http.StatusForbidden,
+		Message: "You are not authorized",
+	}
+	Throttled = Error{
+		Code:    "throttled",
+		Status:  http.StatusTooManyRequests,
+		Message: "You are doing way too much",
+	}
+
+	MissingAuth = Error{
+		Code:    "missing_auth",
+		Status:  http.StatusUnauthorized,
+		Message: "You are not authenticated",
+	}
+
+	Unsupported = Error{
+		Code:    "unsupported",
+		Status:  http.StatusUnprocessableEntity,
+		Message: "Requested action is not supported",
+	}
+
+	InvalidInput = Error{
+		Code:    "invalid_input",
+		Status:  http.StatusBadRequest,
+		Message: "Your request is not valid",
+	}
+
+	InternalIssue = Error{
+		Code:    "internal_issue",
+		Status:  http.StatusInternalServerError,
+		Message: "Oops, something went wrong",
+	}
 )
 
 // E converts any given error to the Error type. Unknown are converted

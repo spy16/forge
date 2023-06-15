@@ -6,11 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"github.com/spy16/forge/builtins/firebase"
 	"github.com/spy16/forge/core"
 	"github.com/spy16/forge/core/log"
 	"github.com/spy16/forge/core/servio"
@@ -19,6 +17,10 @@ import (
 
 // CLI returns a new Cobra CLI that can be used directly.
 func CLI(name string, forgeOpts ...Option) *cobra.Command {
+	if !namePattern.MatchString(name) {
+		panic(errInvalidName)
+	}
+
 	cli := &cobra.Command{
 		Use:   fmt.Sprintf("%s <command> [flags] [args]", name),
 		Short: fmt.Sprintf("%s: a forge application", name),
@@ -47,25 +49,16 @@ func cmdServe(name string, forgeOpts []Option) *cobra.Command {
 		Use:   "serve",
 		Short: "Start HTTP server",
 		Run: func(cmd *cobra.Command, args []string) {
-			if !debug {
-				gin.SetMode(gin.ReleaseMode)
-			}
-
 			cl := makeConfLoader(name, cmd)
-			forgeOpts = append(forgeOpts, WithConfLoader(cl))
+			forgeOpts = append(forgeOpts,
+				WithConfLoader(cl),
+				WithPreHook(func(app PreContext) error {
+					// TODO: initialise modules using config only.
+					return nil
+				}),
+			)
 
-			// When firebase project ID is set, assume user management and token issuing
-			// is done by Firebase. So validate token and extract user accordingly.
-			firebaseProject := cl.String("auth.firebase_project", "")
-			if firebaseProject != "" {
-				forgeOpts = append([]Option{
-					WithAuth(&firebase.Auth{
-						ProjectID: firebaseProject,
-					}),
-				}, forgeOpts...)
-			}
-
-			app, err := Forge(cmd.Context(), name, forgeOpts...)
+			app, err := Forge(name, forgeOpts...)
 			if err != nil {
 				log.Fatal(cmd.Context(), "failed to forge app", err)
 			}
