@@ -41,14 +41,14 @@ func (sb *Auth) Authenticate(ctx context.Context, token string) (*core.Session, 
 	}()
 
 	if resp.StatusCode == 401 {
-		return nil, errors.MissingAuth.Hintf("Auth returned 401")
+		return nil, errors.MissingAuth.Hintf("supabase returned 401")
 	} else if resp.StatusCode != 200 {
-		return nil, errors.InternalIssue.Hintf("Auth returned unexpected status: %s", resp.Status)
+		return nil, errors.InternalIssue.Hintf("supabase returned unexpected status: %s", resp.Status)
 	}
 
 	var userData supabaseUserResponse
 	if err := json.NewDecoder(resp.Body).Decode(&userData); err != nil {
-		return nil, errors.InternalIssue.Hintf("Auth returned invalid response").CausedBy(err)
+		return nil, errors.InternalIssue.Hintf("supabase returned invalid response").CausedBy(err)
 	}
 
 	return &core.Session{
